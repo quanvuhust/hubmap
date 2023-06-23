@@ -29,7 +29,7 @@ class CutOut(Transform):
         self.image_size = image_size
         self.box_size = box_size
         self.prob_cutmix = prob_cutmix
-        self.mask = np.ones((image_size, image_size))
+        self.mask = np.ones((image_size, image_size)).astype(np.bool)
         
     def apply_image(self, img):
         
