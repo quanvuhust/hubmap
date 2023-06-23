@@ -24,23 +24,31 @@ from pycocotools import mask as coco_mask
 __all__ = ["COCOInstanceNewBaselineDatasetMapper"]
  
 class CutOut(Transform):
-    def __init__(self, box_size=50, prob_cutmix=0.8):
+    def __init__(self, image_size, box_size=50, prob_cutmix=0.8):
         super().__init__()
-        
+        self.image_size = image_size
         self.box_size = box_size
         self.prob_cutmix = prob_cutmix
+        self.mask = np.ones((image_size, image_size))
         
     def apply_image(self, img):
         
         if random.random() > self.prob_cutmix:
-            
+            self.mask = np.ones((self.image_size, self.image_size))
             h, w = img.shape[:2]
             num_rand = np.random.randint(10, 30)
             for num_cut in range(num_rand):
                 x_rand, y_rand = random.randint(0, w-self.box_size), random.randint(0, h-self.box_size)
                 img[x_rand:x_rand+self.box_size, y_rand:y_rand+self.box_size, :] = 0
+                self.mask[x_rand:x_rand+self.box_size, y_rand:y_rand+self.box_size] = 0
         
         return np.asarray(img)
+    
+    def apply_segmentation(self, mask):
+        return mask & self.mask
+    
+    def apply_box(self, bboxes):
+        return bboxes
 
     def apply_coords(self, coords):
         return coords.astype(np.float32)
