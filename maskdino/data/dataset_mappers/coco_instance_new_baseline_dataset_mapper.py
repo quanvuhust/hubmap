@@ -102,7 +102,7 @@ def build_transform_gen(cfg, is_train):
         T.RandomSaturation(0.1, 1),
         T.FixedSizeCrop(crop_size=(image_size, image_size)),
         T.RandomRotation(angle=[90, 90]),
-        CutOut(box_size=image_size//20),
+        CutOut(image_size, box_size=image_size//20),
     ])
     # augmentation.extend([
     #     T.RandomBrightness(0.5, 1.5),
