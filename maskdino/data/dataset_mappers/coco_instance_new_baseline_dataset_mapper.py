@@ -34,7 +34,7 @@ class CutOut(Transform):
     def apply_image(self, img):
         
         if random.random() > self.prob_cutmix:
-            self.mask = np.ones((self.image_size, self.image_size))
+            self.mask = np.ones((self.image_size, self.image_size)).astype(np.bool)
             h, w = img.shape[:2]
             num_rand = np.random.randint(10, 30)
             for num_cut in range(num_rand):
