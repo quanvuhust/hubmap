@@ -20,7 +20,7 @@ _PREDEFINED_SPLITS = {
     ),
     "hubmap_instance_val": (
         "/kaggle/input/hubmap-hacking-the-human-vasculature/train",
-        "/kaggle/input/split-coco-kfold-detection/hubmap_val_all.json",
+        "/kaggle/input/split-coco-kfold-detection/hubmap_val_fold_3.json",
     ),
 }
 
