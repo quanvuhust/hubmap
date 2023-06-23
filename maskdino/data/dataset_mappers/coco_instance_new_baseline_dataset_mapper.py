@@ -45,6 +45,7 @@ class CutOut(Transform):
         return np.asarray(img)
     
     def apply_segmentation(self, mask):
+        print(mask.dtype)
         return mask & self.mask
     
     def apply_box(self, bboxes):
