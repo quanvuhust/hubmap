@@ -42,8 +42,8 @@ class CutOut(Transform):
         
         return np.asarray(img)
 
-def apply_coords(self, coords):
-    return coords.astype(np.float32)
+    def apply_coords(self, coords):
+        return coords.astype(np.float32)
 
 
 def convert_coco_poly_to_mask(segmentations, height, width):
