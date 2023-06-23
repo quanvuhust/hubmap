@@ -10,18 +10,42 @@ import logging
  
 import numpy as np
 import torch
+import random
  
 from detectron2.config import configurable
 from detectron2.data import detection_utils as utils
 from detectron2.data import transforms as T
 from detectron2.data.transforms import TransformGen
 from detectron2.structures import BitMasks, Instances, PolygonMasks
+from fvcore.transforms.transform import Transform
  
 from pycocotools import mask as coco_mask
  
 __all__ = ["COCOInstanceNewBaselineDatasetMapper"]
  
- 
+class CutOut(Transform):
+    def __init__(self, box_size=50, prob_cutmix=0.8):
+        super().__init__()
+        
+        self.box_size = box_size
+        self.prob_cutmix = prob_cutmix
+        
+    def apply_image(self, img):
+        
+        if random.random() > self.prob_cutmix:
+            
+            h, w = img.shape[:2]
+            num_rand = np.random.randint(10, 30)
+            for num_cut in range(num_rand):
+                x_rand, y_rand = random.randint(0, w-self.box_size), random.randint(0, h-self.box_size)
+                img[x_rand:x_rand+self.box_size, y_rand:y_rand+self.box_size, :] = 0
+        
+        return np.asarray(img)
+
+def apply_coords(self, coords):
+    return coords.astype(np.float32)
+
+
 def convert_coco_poly_to_mask(segmentations, height, width):
     masks = []
     for polygons in segmentations:
@@ -65,7 +89,12 @@ def build_transform_gen(cfg, is_train):
         T.ResizeScale(
             min_scale=min_scale, max_scale=max_scale, target_height=image_size, target_width=image_size
         ),
+        T.RandomBrightness(0.1, 1.6),
+        T.RandomContrast(0.1, 1),
+        T.RandomSaturation(0.1, 1),
         T.FixedSizeCrop(crop_size=(image_size, image_size)),
+        T.RandomRotation(angle=[90, 90]),
+        CutOut(),
     ])
     # augmentation.extend([
     #     T.RandomBrightness(0.5, 1.5),
