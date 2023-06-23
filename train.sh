@@ -1,1 +1,1 @@
-python train_net.py --num-gpus 2 --config-file configs/hubmap/instance-segmentation/swin/maskdino_R50_bs16_50ep_4s_dowsample1_2048.yaml MODEL.WEIGHTS ../maskdino_swinl_50ep_300q_hid2048_3sd1_instance_mask52.1ap_box58.3ap.pth
+python train_net.py --num-gpus 2 --config-file configs/hubmap/instance-segmentation/swin/maskdino_R50_bs16_50ep_4s_dowsample1_2048.yaml MODEL.WEIGHTS /kaggle/input/maskdino-pretrained/maskdino_swinl_50ep_300q_hid2048_3sd1_instance_mask52.1ap_box58.3ap.pth
