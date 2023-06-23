@@ -44,9 +44,9 @@ class CutOut(Transform):
         
         return np.asarray(img)
     
-    def apply_segmentation(self, mask):
-        print(mask.dtype)
-        return mask & self.mask
+    def apply_segmentation(self, input_mask):
+        input_mask = np.where(input_mask>0.5, 1, 0).astype(np.bool)
+        return (input_mask & self.mask).astype(np.float64)
     
     def apply_box(self, bboxes):
         return bboxes
