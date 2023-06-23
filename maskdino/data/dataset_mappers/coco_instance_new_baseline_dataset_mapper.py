@@ -67,11 +67,11 @@ def build_transform_gen(cfg, is_train):
         ),
         T.FixedSizeCrop(crop_size=(image_size, image_size)),
     ])
-    augmentation.extend([
-        T.RandomBrightness(0.5, 1.5),
-            T.RandomContrast(0.5, 1.5),
-            T.RandomSaturation(0.5, 1.5),
-    ])
+    # augmentation.extend([
+    #     T.RandomBrightness(0.5, 1.5),
+    #         T.RandomContrast(0.5, 1.5),
+    #         T.RandomSaturation(0.5, 1.5),
+    # ])
  
     return augmentation
  
