@@ -17,7 +17,7 @@ DATASETS:
   TRAIN: ("hubmap_instance_train",)
   TEST: ("hubmap_instance_val",)
 SOLVER:
-  IMS_PER_BATCH: 4
+  IMS_PER_BATCH: 2
   BASE_LR: 0.0001
   STEPS: (12000, 15000)
   MAX_ITER: 16000
