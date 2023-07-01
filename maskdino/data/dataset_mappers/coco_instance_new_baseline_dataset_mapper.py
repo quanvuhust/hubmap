@@ -89,11 +89,6 @@ def build_transform_gen(cfg, is_train):
     if cfg.INPUT.RANDOM_FLIP != "none":
         augmentation.append(
             T.RandomFlip(
-                horizontal=True,
-            )
-        )
-        augmentation.append(
-            T.RandomFlip(
                 vertical=True,
             )
         )
@@ -107,6 +102,9 @@ def build_transform_gen(cfg, is_train):
         T.RandomSaturation(0.1, 1),
         T.FixedSizeCrop(crop_size=(image_size, image_size)),
         T.RandomRotation(angle=[90, 90]),
+        T.RandomFlip(
+                horizontal=True,
+            )
     ])
     # augmentation.extend([
     #     T.RandomBrightness(0.5, 1.5),
