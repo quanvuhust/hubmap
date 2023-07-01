@@ -90,6 +90,10 @@ def build_transform_gen(cfg, is_train):
         augmentation.append(
             T.RandomFlip(
                 horizontal=True,
+            )
+        )
+        augmentation.append(
+            T.RandomFlip(
                 vertical=True,
             )
         )
