@@ -16,11 +16,11 @@ _PREDEFINED_SPLITS = {
     # point annotations without masks
     "hubmap_instance_train": (
         "/kaggle/input/hubmap-hacking-the-human-vasculature/train",
-        "/kaggle/input/split-coco-kfold-cross-eval/hubmap_train_fold_0.json",
+        "/kaggle/input/split-coco-kfold-cross-eval/hubmap_train_fold_1.json",
     ),
     "hubmap_instance_val": (
         "/kaggle/input/hubmap-hacking-the-human-vasculature/train",
-        "/kaggle/input/split-coco-kfold-cross-eval/hubmap_val_fold_0.json",
+        "/kaggle/input/split-coco-kfold-cross-eval/hubmap_val_fold_1.json",
     ),
 }
 
