@@ -15,12 +15,12 @@ HUBMAP_CATEGORIES = [{'id': 1, 'name': 'blood_vessel'}]
 _PREDEFINED_SPLITS = {
     # point annotations without masks
     "hubmap_instance_train": (
-        "/kaggle/input/hubmap-hacking-the-human-vasculature/train",
-        "/kaggle/input/split-coco-kfold-cross-eval/hubmap_train_fold_3.json",
+        "/data/hubmap/train",
+        "/data/hubmap/hubmap_train_fold_0.json",
     ),
     "hubmap_instance_val": (
-        "/kaggle/input/hubmap-hacking-the-human-vasculature/train",
-        "/kaggle/input/split-coco-kfold-cross-eval/hubmap_val_fold_3.json",
+        "/data/hubmap/train",
+        "/data/hubmap/hubmap_val_fold_0.json",
     ),
 }
 

@@ -57,6 +57,7 @@ MODEL:
 SOLVER:
   AMP:
     ENABLED: True
+OUTPUT_DIR: ./output_resnet50
 # TEST:
 #   EVAL_PERIOD: 96
 #  EVAL_FLAG: 1

@@ -42,6 +42,10 @@ from detectron2.projects.deeplab import add_deeplab_config, build_lr_scheduler
 from detectron2.solver.build import maybe_add_gradient_clipping
 from detectron2.utils.logger import setup_logger
 
+from detectron2.modeling import build_model
+
+from utils import model_ema
+
 # MaskDINO
 from maskdino import (
     COCOInstanceNewBaselineDatasetMapper,
@@ -95,7 +99,7 @@ class Trainer(DefaultTrainer):
         kwargs = {
             'trainer': weakref.proxy(self),
         }
-        # kwargs.update(model_ema.may_get_ema_checkpointer(cfg, model)) TODO: release ema training for large models
+        kwargs.update(model_ema.may_get_ema_checkpointer(cfg, model)) #TODO: release ema training for large models
         self.checkpointer = DetectionCheckpointer(
             # Assume you want to save checkpoints together with logs/statistics
             model,
@@ -115,6 +119,81 @@ class Trainer(DefaultTrainer):
             **kwargs,
         )
         # TODO: release GPU cluster submit scripts based on submitit for multi-node training
+
+    @classmethod
+    def build_model(cls, cfg):
+        """
+        Returns:
+            torch.nn.Module:
+        It now calls :func:`detectron2.modeling.build_model`.
+        Overwrite it if you'd like a different model.
+        """
+        model = build_model(cfg)
+        logger = logging.getLogger(__name__)
+        logger.info("Model:\n{}".format(model))
+        # add model EMA if enabled
+        model_ema.may_build_model_ema(cfg, model)
+        return model
+
+    @classmethod
+    def do_test(cls, cfg, model, evaluators=None):
+        # model with ema weights
+        logger = logging.getLogger("detectron2")
+        if cfg.MODEL_EMA.ENABLED:
+            logger.info("Run evaluation with EMA.")
+            with model_ema.apply_model_ema_and_restore(model):
+                results = cls.test(cfg, model, evaluators=evaluators)
+        else:
+            results = cls.test(cfg, model, evaluators=evaluators)
+        return results
+    
+    def build_hooks(self):
+        """
+        Build a list of default hooks, including timing, evaluation,
+        checkpointing, lr scheduling, precise BN, writing events.
+        Returns:
+            list[HookBase]:
+        """
+        cfg = self.cfg.clone()
+        cfg.defrost()
+        cfg.DATALOADER.NUM_WORKERS = 0  # save some memory and time for PreciseBN
+
+        ret = [
+            hooks.IterationTimer(),
+            model_ema.EMAHook(self.cfg, self.model) if cfg.MODEL_EMA.ENABLED else None, # add EMA hook
+            hooks.LRScheduler(),
+            hooks.PreciseBN(
+                # Run at the same freq as (but before) evaluation.
+                cfg.TEST.EVAL_PERIOD,
+                self.model,
+                # Build a new data loader to not affect training
+                self.build_train_loader(cfg),
+                cfg.TEST.PRECISE_BN.NUM_ITER,
+            )
+            if cfg.TEST.PRECISE_BN.ENABLED and get_bn_modules(self.model)
+            else None,
+        ]
+
+        # Do PreciseBN before checkpointer, because it updates the model and need to
+        # be saved by checkpointer.
+        # This is not always the best: if checkpointing has a different frequency,
+        # some checkpoints may have more precise statistics than others.
+        if comm.is_main_process():
+            ret.append(hooks.PeriodicCheckpointer(self.checkpointer, cfg.SOLVER.CHECKPOINT_PERIOD))
+
+        def test_and_save_results():
+            self._last_eval_results = self.do_test(self.cfg, self.model)
+            return self._last_eval_results
+
+        # Do evaluation after checkpointer, because then if it fails,
+        # we can use the saved checkpoint to debug.
+        ret.append(hooks.EvalHook(cfg.TEST.EVAL_PERIOD, test_and_save_results))
+
+        if comm.is_main_process():
+            # Here the default print/log frequency of each writer is used.
+            # run writers in the end, so that evaluation metrics are written
+            ret.append(hooks.PeriodicWriter(self.build_writers(), period=20))
+        return ret
 
     @classmethod
     def build_evaluator(cls, cfg, dataset_name, output_folder=None):
@@ -335,6 +414,7 @@ def setup(args):
     Create configs and perform basic setups.
     """
     cfg = get_cfg()
+    model_ema.add_model_ema_configs(cfg)
     # for poly lr schedule
     add_deeplab_config(cfg)
     add_maskdino_config(cfg)
@@ -351,7 +431,8 @@ def main(args):
     print("Command cfg:", cfg)
     if args.eval_only:
         model = Trainer.build_model(cfg)
-        DetectionCheckpointer(model, save_dir=cfg.OUTPUT_DIR).resume_or_load(
+        kwargs = model_ema.may_get_ema_checkpointer(cfg, model)
+        DetectionCheckpointer(model, save_dir=cfg.OUTPUT_DIR, **kwargs).resume_or_load(
             cfg.MODEL.WEIGHTS, resume=args.resume
         )
         checkpointer = DetectionCheckpointer(model, save_dir=cfg.OUTPUT_DIR)
